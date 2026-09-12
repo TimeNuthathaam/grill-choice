@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#f4f5f7; margin:0; padding:16px; color:#1a1a1a; }
+  h1 { font-size:1.3rem; margin:0 0 4px; }
+  .sub { color:#666; font-size:0.85rem; margin-bottom:16px; }
+  .card { background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .card h2 { font-size:1rem; margin:0 0 8px; }
+  .card p { font-size:0.9rem; line-height:1.5; margin:0 0 10px; color:#333; white-space:pre-wrap; }
+  .choices { display:flex; gap:8px; margin-bottom:8px; }
+  .choices button { flex:1; padding:10px; border-radius:8px; border:1px solid #ddd; background:#fafafa; font-size:0.9rem; cursor:pointer; }
+  .choices button.active[data-v="accept"] { background:#22c55e; color:#fff; border-color:#22c55e; }
+  .choices button.active[data-v="reject"] { background:#ef4444; color:#fff; border-color:#ef4444; }
+  .choices button.active[data-v="comment"] { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .link { display:inline-block; margin-bottom:10px; font-size:0.85rem; color:#2563eb; text-decoration:none; }
+  .link:hover { text-decoration:underline; }
+  textarea { width:100%; min-height:60px; border:1px solid #ddd; border-radius:8px; padding:8px; font-size:0.9rem; font-family:inherit; resize:vertical; }
+  .footer { position:sticky; bottom:0; background:#f4f5f7; padding:12px 0; }
+  #copyBtn { width:100%; padding:14px; font-size:1rem; font-weight:600; border:none; border-radius:10px; background:#1a1a1a; color:#fff; cursor:pointer; }
+  #copyBtn.copied { background:#22c55e; }
+  #status { text-align:center; font-size:0.8rem; color:#888; margin-top:6px; }
+</style>
+</head>
+<body>
+<h1>__TITLE__</h1>
+<div class="sub">อ่านทีละข้อแล้วกดเลือกได้เลย ถ้าอยากเปลี่ยนบางอย่าง ให้กด “ขอแก้” แล้วพิมพ์เพิ่ม</div>
+<div id="cards"></div>
+<div class="footer">
+  <button id="copyBtn" onclick="copySummary()">📋 Copy สรุปคำตอบ</button>
+  <div id="status">ยังไม่ได้ copy</div>
+</div>
+<script>
+const POINTS = __POINTS_JSON__;
+const PAGE_KEY = __PAGE_KEY__;
+const state = {};
+
+function esc(s) {
+  return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+function render() {
+  document.getElementById('cards').innerHTML = POINTS.map((p, i) => `
+    <div class="card">
+      <h2>${i+1}. ${esc(p.title)}</h2>
+      ${p.img ? `<a href="${esc(p.img)}" target="_blank" rel="noopener"><img src="${esc(p.img)}" style="width:100%;border-radius:10px;display:block;margin:8px 0"></a>` : ''}
+      <p>${esc(p.body || '')}</p>
+      ${p.html ? `<div class="rich">${p.html}</div>` : ''}
+      ${p.url ? `<a class="link" href="${esc(p.url)}" target="_blank" rel="noopener">🔗 เปิดดูบทความ</a>` : ''}
+      <div class="choices">
+        <button data-i="${i}" data-v="accept" onclick="choose(${i},'accept')">✅ เอาตามนี้</button>
+        <button data-i="${i}" data-v="reject" onclick="choose(${i},'reject')">❌ ไม่เอาข้อนี้</button>
+        <button data-i="${i}" data-v="comment" onclick="chooseComment(${i})">✏️ ขอแก้</button>
+      </div>
+      <textarea placeholder="อยากแก้ตรงไหน? พิมพ์สั้นๆ ได้เลย" data-i="${i}" oninput="comment(${i}, this.value)"></textarea>
+    </div>
+  `).join('');
+  restore();
+}
+
+function choose(i, v) {
+  state[i] = state[i] || {};
+  state[i].choice = v;
+  updateButtons(i);
+  save();
+}
+
+function chooseComment(i) {
+  choose(i, 'comment');
+  const textarea = document.querySelector(`textarea[data-i="${i}"]`);
+  if (textarea) textarea.focus();
+}
+
+function comment(i, v) {
+  state[i] = state[i] || {};
+  state[i].comment = v;
+  save();
+}
+
+function updateButtons(i) {
+  document.querySelectorAll(`button[data-i="${i}"]`).forEach(b => {
+    b.classList.toggle('active', b.dataset.v === (state[i] || {}).choice);
+  });
+}
+
+function restore() {
+  fetch(`/state?key=${encodeURIComponent(PAGE_KEY)}`).then(r => r.json()).then(d => {
+    Object.assign(state, d.responses || {});
+    POINTS.forEach((_, i) => {
+      updateButtons(i);
+      const c = (state[i] || {}).comment;
+      if (c) {
+        const ta = document.querySelector(`textarea[data-i="${i}"]`);
+        if (ta) ta.value = c;
+      }
+    });
+  }).catch(() => {});
+}
+
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    fetch(`/state?key=${encodeURIComponent(PAGE_KEY)}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({responses: state}) });
+  }, 300);
+}
+
+function buildSummary() {
+  return POINTS.map((p, i) => {
+    const s = state[i] || {};
+    const mark = s.choice === 'accept' ? '✅ เอาตามนี้'
+      : s.choice === 'reject' ? '❌ ไม่เอาข้อนี้'
+      : s.choice === 'comment' ? '✏️ ขอแก้'
+      : '⬜ (ยังไม่เลือก)';
+    let line = `${i+1}. ${p.title} — ${mark}`;
+    if (s.comment) line += `\n   💬 ${s.comment}`;
+    return line;
+  }).join('\n\n');
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '-9999px';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.setAttribute('readonly', '');
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, text.length); // iOS Safari needs an explicit range
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function copySummary() {
+  const text = buildSummary();
+  const btn = document.getElementById('copyBtn');
+  const status = document.getElementById('status');
+
+  function onSuccess() {
+    btn.classList.add('copied');
+    btn.textContent = '✅ Copied!';
+    status.textContent = 'copy แล้ว — วางกลับไปแชทได้เลย';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Copy สรุปคำตอบ'; }, 2000);
+  }
+
+  function onFailure() {
+    status.textContent = 'คัดลอกอัตโนมัติไม่ได้ (browser จำกัดสิทธิ์บน http) — เลือกข้อความด้านล่างแล้วคัดลอกเองได้เลย';
+    showManualCopyBox(text);
+  }
+
+  // navigator.clipboard requires a secure context (https or localhost).
+  // Over plain http on a LAN/Tailscale IP it's undefined in most browsers,
+  // so always have the execCommand fallback ready.
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
+      if (fallbackCopy(text)) onSuccess(); else onFailure();
+    });
+  } else if (fallbackCopy(text)) {
+    onSuccess();
+  } else {
+    onFailure();
+  }
+}
+
+function showManualCopyBox(text) {
+  let box = document.getElementById('manualCopyBox');
+  if (!box) {
+    box = document.createElement('textarea');
+    box.id = 'manualCopyBox';
+    box.style.width = '100%';
+    box.style.minHeight = '120px';
+    box.style.marginTop = '8px';
+    box.style.border = '1px solid #ddd';
+    box.style.borderRadius = '8px';
+    box.style.padding = '8px';
+    box.style.fontSize = '0.85rem';
+    document.querySelector('.footer').appendChild(box);
+  }
+  box.value = text;
+  box.style.display = 'block';
+  box.focus();
+  box.select();
+}
+
+render();
+</script>
+</body>
+</html>
