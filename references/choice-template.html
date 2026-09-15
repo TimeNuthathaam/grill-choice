@@ -32,8 +32,8 @@
 <div class="sub">อ่านทีละข้อแล้วกดเลือกได้เลย ถ้าอยากเปลี่ยนบางอย่าง ให้กด “ขอแก้” แล้วพิมพ์เพิ่ม</div>
 <div id="cards"></div>
 <div class="footer">
-  <button id="copyBtn" onclick="copySummary()">📋 Copy สรุปคำตอบ</button>
-  <div id="status">ยังไม่ได้ copy</div>
+  <button id="copyBtn" onclick="copySummary()">📋 คัดลอกคำตอบ</button>
+  <div id="status">ยังไม่ได้คัดลอก</div>
 </div>
 <script>
 const POINTS = __POINTS_JSON__;
@@ -147,13 +147,13 @@ function copySummary() {
 
   function onSuccess() {
     btn.classList.add('copied');
-    btn.textContent = '✅ Copied!';
-    status.textContent = 'copy แล้ว — วางกลับไปแชทได้เลย';
-    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Copy สรุปคำตอบ'; }, 2000);
+    btn.textContent = '✅ คัดลอกแล้ว';
+    status.textContent = 'คัดลอกแล้ว — กลับไปวางในแชทได้เลย';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 คัดลอกคำตอบ'; }, 2000);
   }
 
   function onFailure() {
-    status.textContent = 'คัดลอกอัตโนมัติไม่ได้ (browser จำกัดสิทธิ์บน http) — เลือกข้อความด้านล่างแล้วคัดลอกเองได้เลย';
+    status.textContent = 'คัดลอกอัตโนมัติไม่ได้ ให้คัดลอกข้อความในช่องด้านล่าง แล้วนำไปวางในแชท';
     showManualCopyBox(text);
   }
 

@@ -1,13 +1,30 @@
 ---
 name: grill-choice
-description: Help a user think through a plan, strategy, product, project, or major decision by asking only the highest-priority unresolved questions in rounds, then presenting concrete options in a local interactive HTML page where they can accept, reject, or comment. Use whenever the user asks to be challenged on an idea, plan, decision, requirements, priorities, trade-offs, or wants an easy way to choose among recommendations. Explain everything in simple Thai that a Grade 9 student can understand.
+description: Help a user think through a plan, strategy, product, project, or major decision by asking only the highest-priority unresolved questions in rounds, then presenting concrete options in a local interactive HTML page where they can accept, reject, or comment. Use whenever the user asks to be challenged on an idea, plan, decision, requirements, priorities, trade-offs, or wants an easy way to choose among recommendations. All user-facing language must stay at or below Thai Grade 9 (ม.3), with short, simple examples when helpful.
 ---
 
 # Grill Choice
 
-Turn vague plans into decisions the user can make confidently. Write in clear Thai at a Grade 9 level: short sentences, common words, and no technical terms unless you explain them simply.
+Turn vague plans into decisions the user can make confidently. Keep all user-facing language at or below Thai Grade 9 (ม.3). This is a ceiling, not a target to exceed.
 
 This skill includes the HTML workflow, template, and local server. Use the bundled files below; no separate `html-choice` installation or invocation is needed.
+
+## ภาษาไม่เกินระดับ ม.3
+
+ใช้กติกานี้กับคำถาม คำแนะนำ การ์ด HTML ปุ่ม และสรุปคำตอบทุกครั้ง:
+
+- ใช้คำไทยที่พบในชีวิตประจำวัน ประโยคสั้น และบอกทีละเรื่อง
+- ไม่สมมติว่าผู้ใช้รู้เรื่องธุรกิจ เทคโนโลยี หรือคำเฉพาะมาก่อน
+- เปลี่ยนศัพท์ยากเป็นคำง่าย เช่น “ลีด” → “คนที่สนใจและทักมาถาม” ถ้าต้องใช้ชื่อเฉพาะ ให้บอกความหมายง่ายๆ ทันที
+- บอกตรงๆ ว่าจะทำอะไร แล้วผู้ใช้จะเห็นอะไรเปลี่ยนไป ใช้ชื่อคนหรือสิ่งของให้ชัด
+- ถ้าเรื่องยังนึกภาพยาก ให้แทรกตัวอย่างใกล้ตัวสั้นๆ หนึ่งตัวอย่าง ไม่ต้องใส่ทุกข้อ
+- ตัวเลขที่สมมติขึ้นต้องบอกว่าเป็นตัวอย่าง อย่าเขียนเหมือนเป็นผลที่เกิดขึ้นจริง
+- ก่อนส่ง ลองอ่านในมุมคนที่เพิ่งรู้เรื่องนี้ ถ้ายังต้องเดาความหมาย ให้เขียนใหม่ด้วยคำที่ง่ายกว่า โดยเก็บข้อเท็จจริงและข้อควรรู้ไว้ครบ
+
+ตัวอย่าง:
+
+> ❌ “กำหนด KPI เพื่อวัด Conversion ของลีด”
+> ✅ “อยากนับว่ามีคนทักแล้วจองกี่คนไหม? ตัวอย่างสมมติ: มีคนทัก 10 คน แล้วจอง 2 คน”
 
 ## Choose the right mode
 
@@ -33,7 +50,7 @@ Use this exact question shape. Keep every part easy to understand:
 ---
 ```
 
-Keep questions specific. For example, ask “เป้าหมายหลักของหน้าแรกคือเก็บลีดหรือปิดการขายทันที?” before asking about ad channels or copy variants.
+Keep questions specific. For example, ask “อยากให้คนที่เข้าหน้าเว็บทักมาถามก่อน หรือกดซื้อได้เลย?” before asking where to place ads or what the posts should say.
 
 ## Choice-page mode
 
@@ -68,7 +85,7 @@ mkdir -p "$HOME/Downloads/html-choice"
 [
   {
     "title": "เริ่มจากกลุ่มลูกค้าหลักกลุ่มเดียวไหม?",
-    "body": "โฟกัสกลุ่มเดียวก่อนทำให้ข้อความคมและวัดผลได้ง่ายขึ้น",
+    "body": "เริ่มจากลูกค้ากลุ่มเดียวก่อน จะเขียนให้ตรงใจได้ง่ายขึ้น\nตัวอย่าง: ทำโพสต์สำหรับคนที่เพิ่งรู้จักร้าน",
     "url": ""
   }
 ]
@@ -87,7 +104,7 @@ skill_dir = Path.home() / '.codex' / 'skills' / 'grill-choice'
 archive = Path.home() / 'Downloads' / 'html-choice'
 archive.mkdir(parents=True, exist_ok=True)
 points = [
-    {"title": "เริ่มจากกลุ่มลูกค้าหลักกลุ่มเดียวไหม?", "body": "โฟกัสกลุ่มเดียวก่อนทำให้ข้อความคมและวัดผลได้ง่ายขึ้น"}
+    {"title": "เริ่มจากกลุ่มลูกค้าหลักกลุ่มเดียวไหม?", "body": "เริ่มจากลูกค้ากลุ่มเดียวก่อน จะเขียนให้ตรงใจได้ง่ายขึ้น\nตัวอย่าง: ทำโพสต์สำหรับคนที่เพิ่งรู้จักร้าน"}
 ]
 title = 'ตัดสินใจเรื่องแผนคอนเทนต์'
 page_key = f"{datetime.now():%Y%m%d-%H%M%S-%f}-{re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-') or 'choice'}"
@@ -110,7 +127,7 @@ PY
 python3 "$HOME/.codex/skills/grill-choice/scripts/ensure-choice-service.py" "$HOME/Downloads/html-choice" 8767
 ```
 
-Open `http://127.0.0.1:8767/<page-key>.html`. The page saves responses beside the HTML as `<page-key>.state.json`; read that file after the user says they have finished. Tell the user in simple Thai: “กดเลือกทีละข้อ แล้วกด Copy ส่งคำตอบกลับมาได้เลย”
+Open `http://127.0.0.1:8767/<page-key>.html`. The page saves responses beside the HTML as `<page-key>.state.json`; read that file after the user says they have finished. Tell the user in simple Thai: “กดเลือกทีละข้อ แล้วกด ‘คัดลอกคำตอบ’ นำมาวางในแชทได้เลย”
 
 Use port **8767** and the shared `~/Downloads/html-choice/` archive. Keep each named page and its state; only `latest.html` and the root URL change to the newest page. The HTML has no CDN or external font dependency. Optional remote images and links still need network access.
 
